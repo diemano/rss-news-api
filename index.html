@@ -1,8 +1,9 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>Notícias de Tecnologia</title>
+  <title>Notícias de Tecnologia Atualizadas</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 1rem; }
@@ -10,15 +11,18 @@
     h1 { margin: 0; font-size: 1.8rem; }
     .search-box { max-width: 600px; margin: 1rem auto; text-align: center; }
     .search-box input { width: 100%; padding: 0.7rem; font-size: 1rem; border: 1px solid #ccc; border-radius: 6px; }
-    .section { margin-top: 2rem; }
-    .section h2 { color: #01426a; border-bottom: 2px solid #01426a; }
-    .feeds { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
+    .feeds { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem; padding: 1rem; }
     .card {
       background: white; border-radius: 8px; padding: 1rem; box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      display: flex; flex-direction: column; justify-content: space-between;
+      display: flex; flex-direction: column; justify-content: space-between; position: relative;
     }
-    .card h3 { font-size: 1rem; margin: 0 0 0.5rem; color: #01426a; }
-    .card p { font-size: 0.9rem; color: #333; flex-grow: 1; }
+    .card .tag {
+      position: absolute; top: 1rem; right: 1rem;
+      background: #01426a; color: white; padding: 0.3rem 0.6rem;
+      font-size: 0.75rem; border-radius: 4px;
+    }
+    .card h3 { font-size: 1.05rem; margin-top: 1.5rem; color: #01426a; }
+    .card p { font-size: 0.95rem; color: #333; flex-grow: 1; }
     .card a { margin-top: 0.7rem; display: inline-block; background: #01426a; color: white;
       padding: 0.4rem 0.8rem; border-radius: 5px; text-decoration: none; font-size: 0.9rem;
     }
@@ -28,84 +32,83 @@
 <body>
   <header>
     <h1>🌐 Notícias de Tecnologia</h1>
-    <p>Com agrupamento por tema e busca em tempo real</p>
+    <p>Resumo com fonte e categoria visível</p>
   </header>
 
   <div class="search-box">
     <input type="text" id="searchInput" placeholder="Buscar por palavra-chave..." />
   </div>
 
-  <div id="noticiasContainer"></div>
+  <div class="feeds" id="feedContainer"></div>
 
   <script>
-    const temas = {
-      "Inteligência Artificial": ["ai", "artificial", "machine learning", "neural", "deep learning"],
-      "Inovação": ["inovação", "innovation", "descoberta", "breakthrough", "pesquisa"],
-      "Cibersegurança": ["security", "cyber", "ransomware", "hacker", "hacking", "segurança"],
-      "Big Tech / Negócios": ["apple", "google", "meta", "startup", "microsoft", "negócio", "amazon"],
-      "Gadgets / Hardware": ["hardware", "device", "gadget", "smartphone", "chip"]
+    const categorias = {
+      "Inteligência Artificial": ["ai", "machine learning", "inteligência artificial", "chatgpt"],
+      "Inovação": ["innovation", "inovação", "pesquisa", "breakthrough"],
+      "Cibersegurança": ["cyber", "segurança", "hacker", "ransomware"],
+      "Hardware": ["hardware", "chip", "teardown", "smartphone", "device"],
+      "Big Tech": ["google", "meta", "apple", "microsoft", "amazon", "startup"]
     };
 
     const feeds = [
       { nome: "TechCrunch", url: "https://techcrunch.com/feed/" },
       { nome: "The Verge", url: "https://www.theverge.com/rss/index.xml" },
       { nome: "Canaltech", url: "https://feed.feedburner.com/canaltech" },
-      { nome: "Olhar Digital", url: "https://olhardigital.com.br/feed/" },
-      { nome: "MIT Tech Review", url: "https://www.technologyreview.com/feed/" },
-      { nome: "Wired", url: "https://www.wired.com/feed/rss" }
+      { nome: "IEEE Spectrum", url: "https://spectrum.ieee.org/rss/fulltext" },
+      { nome: "Reuters", url: "https://www.reutersagency.com/feed/?best-sectors=technology" },
+      { nome: "Tom's Hardware", url: "https://www.tomshardware.com/feeds/all" },
+      { nome: "Digital Trends", url: "https://www.digitaltrends.com/feed/" },
+      { nome: "TechRadar", url: "https://www.techradar.com/rss" },
+      { nome: "BleepingComputer", url: "https://www.bleepingcomputer.com/feed/" }
     ];
 
-    const container = document.getElementById("noticiasContainer");
-    const secoes = {};
-
-    function normalizar(texto) {
-      return texto.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+    function normalizar(txt) {
+      return txt.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
     }
 
-    function detectarTema(texto) {
-      const txt = normalizar(texto);
-      for (const tema in temas) {
-        if (temas[tema].some(p => txt.includes(p))) return tema;
+    function detectarCategoria(txt) {
+      const t = normalizar(txt);
+      for (const cat in categorias) {
+        if (categorias[cat].some(p => t.includes(p))) return cat;
       }
       return "Outros";
     }
 
-    function criarSecao(tema) {
-      const div = document.createElement("div");
-      div.className = "section";
-      div.innerHTML = `<h2>${tema}</h2><div class="feeds" id="tema-${tema}"></div>`;
-      container.appendChild(div);
-      secoes[tema] = div.querySelector(".feeds");
-    }
-
-    async function buscarFeed(url, fonte) {
-      const apiURL = `/.netlify/functions/rss?url=${encodeURIComponent(url)}`;
-      const res = await fetch(apiURL);
+    async function buscarFeed(url) {
+      const endpoint = `/.netlify/functions/rss?url=${encodeURIComponent(url)}`;
+      const res = await fetch(endpoint);
       return await res.json();
     }
 
-    async function carregarNoticias() {
-      for (const tema in temas) criarSecao(tema);
-      criarSecao("Outros");
+    function resumoCoeso(texto, fonte) {
+      const clean = texto.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
+      const slice = clean.slice(0, 600);
+      const pontoFinal = slice.lastIndexOf(".");
+      const final = pontoFinal > 400 ? slice.slice(0, pontoFinal + 1) : slice + "...";
+      return `${final} As informações são do site ${fonte}.`;
+    }
 
-      for (const feed of feeds) {
+    async function carregar() {
+      const container = document.getElementById("feedContainer");
+      for (const fonte of feeds) {
         try {
-          const noticias = await buscarFeed(feed.url, feed.nome);
+          const noticias = await buscarFeed(fonte.url);
           noticias.forEach(n => {
             const titulo = n.title || "";
-            const descricao = n.contentSnippet || n.description || "";
-            const tema = detectarTema(titulo + " " + descricao);
+            const desc = n.contentSnippet || n.description || "";
+            const categoria = detectarCategoria(titulo + " " + desc);
             const card = document.createElement("div");
             card.className = "card";
             card.innerHTML = `
-              <h3>[${feed.nome}] ${titulo}</h3>
-              <p>${descricao.slice(0, 200)}...</p>
+              <div class="tag">${categoria}</div>
+              <h3>${titulo}</h3>
+              <p>${resumoCoeso(desc, fonte.nome)}</p>
               <a href="${n.link}" target="_blank">Ler notícia</a>
             `;
-            secoes[tema].appendChild(card);
+            container.appendChild(card);
           });
-        } catch (e) {
-          console.error("Erro com feed:", feed.nome, e);
+        } catch (err) {
+          console.error("Erro ao carregar de", fonte.nome, err);
         }
       }
     }
@@ -113,13 +116,13 @@
     function aplicarFiltro() {
       const termo = normalizar(document.getElementById("searchInput").value);
       document.querySelectorAll(".card").forEach(card => {
-        const texto = normalizar(card.textContent);
-        card.classList.toggle("hidden", !texto.includes(termo));
+        const txt = normalizar(card.textContent);
+        card.classList.toggle("hidden", !txt.includes(termo));
       });
     }
 
     document.getElementById("searchInput").addEventListener("input", aplicarFiltro);
-    carregarNoticias();
+    carregar();
   </script>
 </body>
 </html>
