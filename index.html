@@ -1,0 +1,21 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Teste RSS com Netlify e GitHub</title>
+</head>
+<body>
+  <h1>Testar API RSS</h1>
+  <button onclick="buscar()">Buscar do TechCrunch</button>
+  <pre id="saida"></pre>
+
+  <script>
+    async function buscar() {
+      const res = await fetch("/.netlify/functions/rss?url=https://techcrunch.com/feed/");
+      const data = await res.json();
+      document.getElementById("saida").textContent = JSON.stringify(data, null, 2);
+    }
+  </script>
+</body>
+</html>

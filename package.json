@@ -1,0 +1,8 @@
+
+{
+  "name": "rss-feed-api",
+  "version": "1.0.0",
+  "dependencies": {
+    "rss-parser": "^3.12.0"
+  }
+}
