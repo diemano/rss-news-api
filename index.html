@@ -1,21 +1,125 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>Teste RSS com Netlify e GitHub</title>
+  <meta charset="UTF-8" />
+  <title>Notícias de Tecnologia</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 1rem; }
+    header { background: #01426a; color: white; padding: 1.5rem; text-align: center; }
+    h1 { margin: 0; font-size: 1.8rem; }
+    .search-box { max-width: 600px; margin: 1rem auto; text-align: center; }
+    .search-box input { width: 100%; padding: 0.7rem; font-size: 1rem; border: 1px solid #ccc; border-radius: 6px; }
+    .section { margin-top: 2rem; }
+    .section h2 { color: #01426a; border-bottom: 2px solid #01426a; }
+    .feeds { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
+    .card {
+      background: white; border-radius: 8px; padding: 1rem; box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      display: flex; flex-direction: column; justify-content: space-between;
+    }
+    .card h3 { font-size: 1rem; margin: 0 0 0.5rem; color: #01426a; }
+    .card p { font-size: 0.9rem; color: #333; flex-grow: 1; }
+    .card a { margin-top: 0.7rem; display: inline-block; background: #01426a; color: white;
+      padding: 0.4rem 0.8rem; border-radius: 5px; text-decoration: none; font-size: 0.9rem;
+    }
+    .hidden { display: none !important; }
+  </style>
 </head>
 <body>
-  <h1>Testar API RSS</h1>
-  <button onclick="buscar()">Buscar do TechCrunch</button>
-  <pre id="saida"></pre>
+  <header>
+    <h1>🌐 Notícias de Tecnologia</h1>
+    <p>Com agrupamento por tema e busca em tempo real</p>
+  </header>
+
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="Buscar por palavra-chave..." />
+  </div>
+
+  <div id="noticiasContainer"></div>
 
   <script>
-    async function buscar() {
-      const res = await fetch("/.netlify/functions/rss?url=https://techcrunch.com/feed/");
-      const data = await res.json();
-      document.getElementById("saida").textContent = JSON.stringify(data, null, 2);
+    const temas = {
+      "Inteligência Artificial": ["ai", "artificial", "machine learning", "neural", "deep learning"],
+      "Inovação": ["inovação", "innovation", "descoberta", "breakthrough", "pesquisa"],
+      "Cibersegurança": ["security", "cyber", "ransomware", "hacker", "hacking", "segurança"],
+      "Big Tech / Negócios": ["apple", "google", "meta", "startup", "microsoft", "negócio", "amazon"],
+      "Gadgets / Hardware": ["hardware", "device", "gadget", "smartphone", "chip"]
+    };
+
+    const feeds = [
+      { nome: "TechCrunch", url: "https://techcrunch.com/feed/" },
+      { nome: "The Verge", url: "https://www.theverge.com/rss/index.xml" },
+      { nome: "Canaltech", url: "https://feed.feedburner.com/canaltech" },
+      { nome: "Olhar Digital", url: "https://olhardigital.com.br/feed/" },
+      { nome: "MIT Tech Review", url: "https://www.technologyreview.com/feed/" },
+      { nome: "Wired", url: "https://www.wired.com/feed/rss" }
+    ];
+
+    const container = document.getElementById("noticiasContainer");
+    const secoes = {};
+
+    function normalizar(texto) {
+      return texto.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
     }
+
+    function detectarTema(texto) {
+      const txt = normalizar(texto);
+      for (const tema in temas) {
+        if (temas[tema].some(p => txt.includes(p))) return tema;
+      }
+      return "Outros";
+    }
+
+    function criarSecao(tema) {
+      const div = document.createElement("div");
+      div.className = "section";
+      div.innerHTML = `<h2>${tema}</h2><div class="feeds" id="tema-${tema}"></div>`;
+      container.appendChild(div);
+      secoes[tema] = div.querySelector(".feeds");
+    }
+
+    async function buscarFeed(url, fonte) {
+      const apiURL = `/.netlify/functions/rss?url=${encodeURIComponent(url)}`;
+      const res = await fetch(apiURL);
+      return await res.json();
+    }
+
+    async function carregarNoticias() {
+      for (const tema in temas) criarSecao(tema);
+      criarSecao("Outros");
+
+      for (const feed of feeds) {
+        try {
+          const noticias = await buscarFeed(feed.url, feed.nome);
+          noticias.forEach(n => {
+            const titulo = n.title || "";
+            const descricao = n.contentSnippet || n.description || "";
+            const tema = detectarTema(titulo + " " + descricao);
+            const card = document.createElement("div");
+            card.className = "card";
+            card.innerHTML = `
+              <h3>[${feed.nome}] ${titulo}</h3>
+              <p>${descricao.slice(0, 200)}...</p>
+              <a href="${n.link}" target="_blank">Ler notícia</a>
+            `;
+            secoes[tema].appendChild(card);
+          });
+        } catch (e) {
+          console.error("Erro com feed:", feed.nome, e);
+        }
+      }
+    }
+
+    function aplicarFiltro() {
+      const termo = normalizar(document.getElementById("searchInput").value);
+      document.querySelectorAll(".card").forEach(card => {
+        const texto = normalizar(card.textContent);
+        card.classList.toggle("hidden", !texto.includes(termo));
+      });
+    }
+
+    document.getElementById("searchInput").addEventListener("input", aplicarFiltro);
+    carregarNoticias();
   </script>
 </body>
 </html>
