@@ -1,0 +1,33 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Teste de Resumo com Gemini</title>
+</head>
+<body>
+  <h1>Gerar Resumo Traduzido com Gemini</h1>
+  <form onsubmit="gerarResumo(event)">
+    <p><input id="titulo" placeholder="Título" style="width:100%" required /></p>
+    <p><textarea id="descricao" placeholder="Descrição (em inglês ou original)" style="width:100%;height:100px" required></textarea></p>
+    <p><input id="fonte" placeholder="Fonte (ex: TechCrunch)" style="width:100%" required /></p>
+    <p><button type="submit">Gerar Resumo</button></p>
+  </form>
+  <pre id="saida"></pre>
+  <script>
+    async function gerarResumo(e) {
+      e.preventDefault();
+      const titulo = document.getElementById("titulo").value;
+      const descricao = document.getElementById("descricao").value;
+      const fonte = document.getElementById("fonte").value;
+      const res = await fetch("/.netlify/functions/generate-summary", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: titulo, description: descricao, source: fonte })
+      });
+      const data = await res.json();
+      document.getElementById("saida").textContent = data.resumo || JSON.stringify(data);
+    }
+  </script>
+</body>
+</html>
