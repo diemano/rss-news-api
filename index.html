@@ -114,8 +114,8 @@
           `;
           container.appendChild(card);
 
-          const titulo = await traduzir(tituloOrig);
-          let descricao = await traduzir(descOrig);
+          const titulo = await traduzir(typeof tituloOrig === 'string' ? tituloOrig : '');
+          let descricao = await traduzir(typeof descOrig === 'string' ? descOrig : '');
           if (descricao.length > 600) {
             const corte = descricao.lastIndexOf(".", 600);
             descricao = descricao.slice(0, corte !== -1 ? corte + 1 : 600);
