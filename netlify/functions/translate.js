@@ -20,7 +20,9 @@ exports.handler = async function(event) {
 
     const response = await fetch(apiUrl, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json",
+        "Accept": "application/json"
+       },
       body: JSON.stringify(payload)
     });
 
