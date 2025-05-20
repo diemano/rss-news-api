@@ -1,9 +1,8 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>Notícias de Tecnologia com IA (Debug)</title>
+  <title>Notícias de Tecnologia Traduzidas</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 1rem; }
@@ -32,8 +31,8 @@
 </head>
 <body>
   <header>
-    <h1>🤖 Notícias com IA (debug)</h1>
-    <p>Exibe erros da API Gemini no console</p>
+    <h1>🌍 Notícias Traduzidas</h1>
+    <p>Sem IA – tradução automática com LibreTranslate</p>
   </header>
 
   <div class="search-box">
@@ -76,27 +75,30 @@
       return data.toLocaleDateString("pt-BR", { day: 'numeric', month: 'long', year: 'numeric' });
     }
 
+    async function traduzirTexto(texto) {
+      try {
+        const res = await fetch("https://libretranslate.de/translate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            q: texto,
+            source: "en",
+            target: "pt",
+            format: "text"
+          })
+        });
+        const data = await res.json();
+        return data.translatedText || texto;
+      } catch (e) {
+        console.warn("⚠️ Falha na tradução:", e);
+        return texto;
+      }
+    }
+
     async function buscarFeed(url) {
       const endpoint = `/.netlify/functions/rss?url=${encodeURIComponent(url)}`;
       const res = await fetch(endpoint);
       return await res.json();
-    }
-
-    async function gerarResumoGemini(title, description, source) {
-      try {
-        const res = await fetch("/.netlify/functions/generate-summary", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ title, description, source })
-        });
-        const data = await res.json();
-        if (data.resumo) return data.resumo;
-        console.error("❌ Erro no resumo:", data);
-        return "[Erro ao gerar resumo com IA]";
-      } catch (err) {
-        console.error("❌ Erro na conexão:", err);
-        return "[Erro de conexão com IA]";
-      }
     }
 
     async function carregar() {
@@ -105,26 +107,27 @@
           const noticias = await buscarFeed(fonte.url);
           for (const n of noticias) {
             const titulo = n.title || "";
-            const descricao = n.contentSnippet || n.description || "";
+            const descricaoOriginal = n.contentSnippet || n.description || "";
             const dataPub = formatarData(n.pubDate || Date.now());
-            const categoria = detectarCategoria(titulo + " " + descricao);
+            const categoria = detectarCategoria(titulo + " " + descricaoOriginal);
 
             const card = document.createElement("div");
             card.className = "card";
+            const textoTemp = "🔄 Traduzindo...";
             card.innerHTML = `
               <div class="tag">${categoria}</div>
               <h3>${titulo}</h3>
               <small>${dataPub} • ${fonte.nome}</small>
-              <p>⏳ Aguardando resumo da IA...</p>
+              <p>${textoTemp}</p>
               <a href="${n.link}" target="_blank">Ler notícia</a>
             `;
             container.appendChild(card);
 
-            const resumo = await gerarResumoGemini(titulo, descricao, fonte.nome);
-            card.querySelector("p").textContent = resumo;
+            const descricaoTraduzida = await traduzirTexto(descricaoOriginal);
+            card.querySelector("p").textContent = descricaoTraduzida;
           }
         } catch (err) {
-          console.error("Erro ao carregar feed de", fonte.nome, err);
+          console.error("Erro ao carregar de", fonte.nome, err);
         }
       }
     }
