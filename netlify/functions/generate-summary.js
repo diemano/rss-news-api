@@ -1,6 +1,6 @@
 
 exports.handler = async function(event) {
-  const GEMINI_API_KEY = "AIzaSyBrNhAiEyI0GNZT8XemNBpfW6kWNxDY0vI";
+  const GEMINI_API_KEY = "AIzaSyBnBcmex7DGK1cBZLHpXv0EJey683kY29w";
   const { title, description, source } = JSON.parse(event.body || "{}");
 
   if (!title || !description || !source) {
