@@ -33,10 +33,11 @@ exports.handler = async function(event) {
     }
 
     const data = await response.json();
+    const traduzido = data?.translatedText?.trim() || texto;
     return {
       statusCode: 200,
       headers: { "Access-Control-Allow-Origin": "*" },
-      body: JSON.stringify({ traduzido: data.translatedText || texto })
+      body: JSON.stringify({ traduzido })
     };
 
   } catch (e) {
