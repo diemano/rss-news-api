@@ -12,17 +12,19 @@ exports.handler = async function(event) {
 
     const apiUrl = "https://libretranslate.com/translate"; // novo endpoint confiável
     const payload = {
-      q: texto,
-      source: origem,
-      target: destino,
-      format: "text"
+      "q": "texto",
+      "source": "en",
+      "target": "pt",
+      "format": "text",
+      "api_key": ""
     };
 
     const response = await fetch(apiUrl, {
       method: "POST",
-      headers: { "Content-Type": "application/json",
+      headers: {
+        "Content-Type": "application/json",
         "Accept": "application/json"
-       },
+      },
       body: JSON.stringify(payload)
     });
 
