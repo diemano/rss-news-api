@@ -3,7 +3,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>Notícias de Tecnologia Atualizadas</title>
+  <title>Notícias de Tecnologia com IA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 1rem; }
@@ -22,7 +22,8 @@
       font-size: 0.75rem; border-radius: 4px;
     }
     .card h3 { font-size: 1.05rem; margin-top: 1.5rem; color: #01426a; }
-    .card p { font-size: 0.95rem; color: #333; flex-grow: 1; }
+    .card small { font-size: 0.8rem; color: #666; margin-bottom: 0.5rem; display: block; }
+    .card p { font-size: 0.95rem; color: #333; flex-grow: 1; white-space: pre-wrap; }
     .card a { margin-top: 0.7rem; display: inline-block; background: #01426a; color: white;
       padding: 0.4rem 0.8rem; border-radius: 5px; text-decoration: none; font-size: 0.9rem;
     }
@@ -31,8 +32,8 @@
 </head>
 <body>
   <header>
-    <h1>🌐 Notícias de Tecnologia</h1>
-    <p>Resumo com fonte e categoria visível</p>
+    <h1>🤖 Notícias de Tecnologia com IA</h1>
+    <p>Resumos gerados automaticamente com Gemini</p>
   </header>
 
   <div class="search-box">
@@ -53,14 +54,10 @@
     const feeds = [
       { nome: "TechCrunch", url: "https://techcrunch.com/feed/" },
       { nome: "The Verge", url: "https://www.theverge.com/rss/index.xml" },
-      { nome: "Canaltech", url: "https://feed.feedburner.com/canaltech" },
-      { nome: "IEEE Spectrum", url: "https://spectrum.ieee.org/rss/fulltext" },
-      { nome: "Reuters", url: "https://www.reutersagency.com/feed/?best-sectors=technology" },
-      { nome: "Tom's Hardware", url: "https://www.tomshardware.com/feeds/all" },
-      { nome: "Digital Trends", url: "https://www.digitaltrends.com/feed/" },
-      { nome: "TechRadar", url: "https://www.techradar.com/rss" },
-      { nome: "BleepingComputer", url: "https://www.bleepingcomputer.com/feed/" }
+      { nome: "Canaltech", url: "https://feed.feedburner.com/canaltech" }
     ];
+
+    const container = document.getElementById("feedContainer");
 
     function normalizar(txt) {
       return txt.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
@@ -74,39 +71,55 @@
       return "Outros";
     }
 
+    function formatarData(ptdate) {
+      const data = new Date(ptdate);
+      return data.toLocaleDateString("pt-BR", { day: 'numeric', month: 'long', year: 'numeric' });
+    }
+
     async function buscarFeed(url) {
       const endpoint = `/.netlify/functions/rss?url=${encodeURIComponent(url)}`;
       const res = await fetch(endpoint);
       return await res.json();
     }
 
-    function resumoCoeso(texto, fonte) {
-      const clean = texto.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
-      const slice = clean.slice(0, 600);
-      const pontoFinal = slice.lastIndexOf(".");
-      const final = pontoFinal > 400 ? slice.slice(0, pontoFinal + 1) : slice + "...";
-      return `${final} As informações são do site ${fonte}.`;
+    async function gerarResumoGemini(title, description, source) {
+      try {
+        const res = await fetch("/.netlify/functions/generate-summary", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title, description, source })
+        });
+        const data = await res.json();
+        return data.resumo || "[Erro ao gerar resumo com IA]";
+      } catch (err) {
+        return "[Erro de conexão com IA]";
+      }
     }
 
     async function carregar() {
-      const container = document.getElementById("feedContainer");
       for (const fonte of feeds) {
         try {
           const noticias = await buscarFeed(fonte.url);
-          noticias.forEach(n => {
+          for (const n of noticias) {
             const titulo = n.title || "";
-            const desc = n.contentSnippet || n.description || "";
-            const categoria = detectarCategoria(titulo + " " + desc);
+            const descricao = n.contentSnippet || n.description || "";
+            const dataPub = formatarData(n.pubDate || Date.now());
+            const categoria = detectarCategoria(titulo + " " + descricao);
+
             const card = document.createElement("div");
             card.className = "card";
             card.innerHTML = `
               <div class="tag">${categoria}</div>
               <h3>${titulo}</h3>
-              <p>${resumoCoeso(desc, fonte.nome)}</p>
+              <small>${dataPub} • ${fonte.nome}</small>
+              <p>⏳ Gerando resumo...</p>
               <a href="${n.link}" target="_blank">Ler notícia</a>
             `;
             container.appendChild(card);
-          });
+
+            const resumo = await gerarResumoGemini(titulo, descricao, fonte.nome);
+            card.querySelector("p").textContent = resumo;
+          }
         } catch (err) {
           console.error("Erro ao carregar de", fonte.nome, err);
         }
