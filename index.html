@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -31,8 +32,8 @@
 </head>
 <body>
   <header>
-    <h1>🌍 Notícias de TI - Agregador</h1>
-    <p>Tradução automática com LibreTranslate</p>
+    <h1>🌍 Notícias Traduzidas (Sem IA)</h1>
+    <p>Tradução via função do Netlify usando LibreTranslate</p>
   </header>
 
   <div class="search-box">
@@ -42,6 +43,12 @@
   <div class="feeds" id="feedContainer"></div>
 
   <script>
+    const feeds = [
+      { nome: "TechCrunch", url: "https://techcrunch.com/feed/" },
+      { nome: "The Verge", url: "https://www.theverge.com/rss/index.xml" },
+      { nome: "Canaltech", url: "https://feed.feedburner.com/canaltech" }
+    ];
+
     const categorias = {
       "Inteligência Artificial": ["ai", "machine learning", "inteligência artificial", "chatgpt"],
       "Inovação": ["innovation", "inovação", "pesquisa", "breakthrough"],
@@ -49,20 +56,6 @@
       "Hardware": ["hardware", "chip", "teardown", "smartphone", "device"],
       "Big Tech": ["google", "meta", "apple", "microsoft", "amazon", "startup"]
     };
-
-    const feeds = [
-      { nome: "TechCrunch", url: "https://techcrunch.com/feed/" },
-      { nome: "The Verge", url: "https://www.theverge.com/rss/index.xml" },
-      { nome: "Canaltech", url: "https://feed.feedburner.com/canaltech" },
-      { nome: "IEEE Spectrum", url: "https://spectrum.ieee.org/rss/fulltext" },
-      { nome: "Reuters", url: "https://www.reutersagency.com/feed/?best-sectors=technology" },
-      { nome: "Tom's Hardware", url: "https://www.tomshardware.com/feeds/all" },
-      { nome: "Digital Trends", url: "https://www.digitaltrends.com/feed/" },
-      { nome: "TechRadar", url: "https://www.techradar.com/rss" },
-      { nome: "BleepingComputer", url: "https://www.bleepingcomputer.com/feed/" }
-    ];
-
-    const container = document.getElementById("feedContainer");
 
     function normalizar(txt) {
       return txt.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
@@ -81,22 +74,17 @@
       return data.toLocaleDateString("pt-BR", { day: 'numeric', month: 'long', year: 'numeric' });
     }
 
-    async function traduzirTexto(texto) {
+    async function traduzir(texto) {
       try {
-        const res = await fetch("https://translate.argosopentech.com/translate", {
+        const r = await fetch("/.netlify/functions/translate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            q: texto,
-            source: "en",
-            target: "pt",
-            format: "text"
-          })
+          body: JSON.stringify({ texto })
         });
-        const data = await res.json();
-        return data.translatedText || texto;
+        const d = await r.json();
+        return d.traduzido || texto;
       } catch (e) {
-        console.warn("⚠️ Falha na tradução:", e);
+        console.warn("❌ Falha na tradução:", e);
         return texto;
       }
     }
@@ -108,29 +96,34 @@
     }
 
     async function carregar() {
+      const container = document.getElementById("feedContainer");
+
       for (const fonte of feeds) {
         try {
           const noticias = await buscarFeed(fonte.url);
           for (const n of noticias) {
             const titulo = n.title || "";
-            const descricaoOriginal = n.contentSnippet || n.description || "";
+            const descricaoRaw = n.contentSnippet || n.description || "";
             const dataPub = formatarData(n.pubDate || Date.now());
-            const categoria = detectarCategoria(titulo + " " + descricaoOriginal);
+            const categoria = detectarCategoria(titulo + " " + descricaoRaw);
 
             const card = document.createElement("div");
             card.className = "card";
-            const textoTemp = "🔄 Traduzindo...";
             card.innerHTML = `
               <div class="tag">${categoria}</div>
-              <h3>${titulo}</h3>
+              <h3>🔄 Traduzindo título...</h3>
               <small>${dataPub} • ${fonte.nome}</small>
-              <p>${textoTemp}</p>
+              <p>🔄 Traduzindo descrição...</p>
               <a href="${n.link}" target="_blank">Ler notícia</a>
             `;
             container.appendChild(card);
 
-            const descricaoTraduzida = await traduzirTexto(descricaoOriginal);
-            card.querySelector("p").textContent = descricaoTraduzida;
+            const tituloTraduzido = await traduzir(titulo);
+            const descricaoTraduzida = await traduzir(descricaoRaw);
+            const descricaoFinal = descricaoTraduzida.length > 600 ? descricaoTraduzida.slice(0, descricaoTraduzida.lastIndexOf(".", 600) + 1) : descricaoTraduzida;
+
+            card.querySelector("h3").textContent = tituloTraduzido;
+            card.querySelector("p").textContent = descricaoFinal || "[Sem descrição]";
           }
         } catch (err) {
           console.error("Erro ao carregar de", fonte.nome, err);
