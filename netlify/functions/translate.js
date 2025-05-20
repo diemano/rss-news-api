@@ -10,7 +10,7 @@ exports.handler = async function(event) {
       };
     }
 
-    const apiUrl = "https://translate.argosopentech.com/translate";
+    const apiUrl = "https://libretranslate.com/translate"; // novo endpoint confiável
     const payload = {
       q: texto,
       source: origem,
