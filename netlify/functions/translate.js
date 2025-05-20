@@ -10,13 +10,13 @@ exports.handler = async function(event) {
       };
     }
 
-    const apiUrl = "https://libretranslate.com/translate"; // novo endpoint confiável
+    const apiUrl = "https://libretranslate.com/translate";
     const payload = {
-      "q": "texto",
-      "source": "en",
-      "target": "pt",
-      "format": "text",
-      "api_key": ""
+      q: texto,
+      source: origem,
+      target: destino,
+      format: "text",
+      api_key: ""  // importante para evitar erro 400
     };
 
     const response = await fetch(apiUrl, {
