@@ -3,16 +3,34 @@ exports.handler = async function(event) {
   try {
     const { texto, origem = "en", destino = "pt" } = JSON.parse(event.body || "{}");
 
-    const response = await fetch("https://translate.argosopentech.com/translate", {
+    if (!texto || typeof texto !== "string") {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: "Parâmetro 'texto' inválido ou ausente." })
+      };
+    }
+
+    const apiUrl = "https://translate.argosopentech.com/translate";
+    const payload = {
+      q: texto,
+      source: origem,
+      target: destino,
+      format: "text"
+    };
+
+    const response = await fetch(apiUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        q: texto,
-        source: origem,
-        target: destino,
-        format: "text"
-      })
+      body: JSON.stringify(payload)
     });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      return {
+        statusCode: response.status,
+        body: JSON.stringify({ error: "Erro HTTP na API de tradução", status: response.status, resposta: errorText })
+      };
+    }
 
     const data = await response.json();
     return {
@@ -20,6 +38,7 @@ exports.handler = async function(event) {
       headers: { "Access-Control-Allow-Origin": "*" },
       body: JSON.stringify({ traduzido: data.translatedText || texto })
     };
+
   } catch (e) {
     return {
       statusCode: 500,
