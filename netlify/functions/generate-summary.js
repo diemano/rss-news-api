@@ -1,3 +1,4 @@
+
 exports.handler = async function(event) {
   const GEMINI_API_KEY = "AIzaSyBrNhAiEyI0GNZT8XemNBpfW6kWNxDY0vI";
   const { title, description, source } = JSON.parse(event.body || "{}");
@@ -16,7 +17,7 @@ Título: ${title}
 Descrição: ${description}`;
 
   try {
-    const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" + GEMINI_API_KEY, {
+    const response = await fetch("https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=" + GEMINI_API_KEY, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
