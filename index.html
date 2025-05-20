@@ -3,7 +3,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>Notícias de Tecnologia com IA</title>
+  <title>Notícias de Tecnologia com IA (Debug)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 1rem; }
@@ -32,8 +32,8 @@
 </head>
 <body>
   <header>
-    <h1>🤖 Notícias de Tecnologia com IA</h1>
-    <p>Resumos gerados automaticamente com Gemini</p>
+    <h1>🤖 Notícias com IA (debug)</h1>
+    <p>Exibe erros da API Gemini no console</p>
   </header>
 
   <div class="search-box">
@@ -90,8 +90,11 @@
           body: JSON.stringify({ title, description, source })
         });
         const data = await res.json();
-        return data.resumo || "[Erro ao gerar resumo com IA]";
+        if (data.resumo) return data.resumo;
+        console.error("❌ Erro no resumo:", data);
+        return "[Erro ao gerar resumo com IA]";
       } catch (err) {
+        console.error("❌ Erro na conexão:", err);
         return "[Erro de conexão com IA]";
       }
     }
@@ -112,7 +115,7 @@
               <div class="tag">${categoria}</div>
               <h3>${titulo}</h3>
               <small>${dataPub} • ${fonte.nome}</small>
-              <p>⏳ Gerando resumo...</p>
+              <p>⏳ Aguardando resumo da IA...</p>
               <a href="${n.link}" target="_blank">Ler notícia</a>
             `;
             container.appendChild(card);
@@ -121,7 +124,7 @@
             card.querySelector("p").textContent = resumo;
           }
         } catch (err) {
-          console.error("Erro ao carregar de", fonte.nome, err);
+          console.error("Erro ao carregar feed de", fonte.nome, err);
         }
       }
     }
