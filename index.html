@@ -24,8 +24,8 @@
 </head>
 <body>
   <header>
-    <h1>🧠 Notícias com IA</h1>
-    <p>Resumo e categoria por IA de fontes variadas</p>
+    <h1>🧠 Feed de Notícias de TI</h1>
+    <p>Um resumo categorizado das principais notícias de TI do Brasil e do Mundo, resumidas por IA.</p>
   </header>
   <div class="search-box">
     <input type="text" id="searchInput" placeholder="Buscar palavra-chave..." />
@@ -34,6 +34,11 @@
   <div class="feeds" id="feedContainer"></div>
   <button id="verMais">🔄 Ver mais notícias</button>
   <script>
+    const senha = prompt("Digite a senha:");
+  if (senha !== "setic123") {
+    document.body.innerHTML = "<h2>Acesso negado</h2>";
+    throw new Error("Acesso negado");
+  }
     const feeds = [
       { nome: "Tecnoblog", url: "https://www.tecnoblog.net/feed/" },
       { nome: "CNBC", url: "https://www.cnbc.com/id/100003114/device/rss/rss.html" },
@@ -85,11 +90,23 @@
         div.innerHTML = `<small>${new Date(n.pubDate).toLocaleDateString("pt-BR")} • ${n.fonte}</small><p>⏳ Gerando conteúdo com IA...</p>`;
         container.appendChild(div);
 
-        const dados = await fetch("/.netlify/functions/generate-summary", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ title: n.title, description: n.contentSnippet || n.description, source: n.fonte })
-        }).then(r => r.json());
+        let dados;
+        try {
+          const resposta = await fetch("/.netlify/functions/generate-summary", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title: n.title, description: n.contentSnippet || n.description, source: n.fonte })
+          });
+          dados = await resposta.json();
+        
+          if (!dados || !dados.resumo || !dados.categoria || dados.resumo.includes("undefined")) {
+            div.remove(); // remove o card inválido
+            continue;
+          }
+        } catch (e) {
+          div.remove(); // também remove em caso de erro na requisição
+          continue;
+        }
 
         div.innerHTML = `
           <div class="tag" onclick="filtrarPorCategoria('${dados.categoria}', this)">${dados.categoria}</div>
