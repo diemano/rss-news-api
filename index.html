@@ -9,131 +9,132 @@
     header { background: #01426a; color: white; padding: 1.5rem; text-align: center; }
     .search-box, #filtros { text-align: center; margin: 1rem auto; }
     .feeds { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem; }
-    .card { background: white; border-radius: 6px; padding: 1rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: relative; }
-    .tag { position: absolute; top: 1rem; right: 1rem; background: #01426a; color: white; padding: 0.2rem 0.6rem; font-size: 0.7rem; border-radius: 4px; }
+    .card { background: white; border-radius: 6px; padding: 1rem; box-shadow: 0 2px 6px rgba(0,0,0,0.1); position: relative; }
+    .tag { position: absolute; top: 1rem; right: 1rem; background: #01426a; color: white; padding: 0.2rem 0.6rem; font-size: 0.75rem; border-radius: 4px; cursor: pointer; }
     .card small { font-size: 0.8rem; color: #666; }
     .card p { font-size: 0.95rem; margin-top: 0.5rem; white-space: pre-wrap; }
-    .card button { margin-top: 0.5rem; background: #01426a; color: white; border: none; padding: 0.4rem 0.6rem; border-radius: 4px; cursor: pointer; }
-    .card button:hover { background: #036; }
+    .card a.btn-link { display: inline-block; margin-top: 0.7rem; text-decoration: none; background: #00aaff; color: white; padding: 0.4rem 0.8rem; border-radius: 4px; font-weight: bold; }
+    .card a.btn-link:hover { background: #0077cc; }
+    #verMais { margin: 2rem auto; display: block; padding: 0.7rem 1.5rem; font-size: 1rem; background: #01426a; color: white; border: none; border-radius: 6px; cursor: pointer; }
+    #verMais:hover { background: #036; }
+    .filter-btn { margin: 0.3rem; padding: 0.5rem 0.8rem; border: none; border-radius: 20px; background: #ddd; cursor: pointer; }
+    .filter-btn.selected { background: #01426a; color: white; font-weight: bold; }
     .hidden { display: none !important; }
   </style>
 </head>
 <body>
   <header>
-    <h1>🧠 Notícias de Tecnologia com IA</h1>
-    <p>Texto original + botão para resumo com IA + filtros por categoria</p>
+    <h1>🧠 Notícias com IA</h1>
+    <p>Resumos e categorias automáticas + filtros interativos</p>
   </header>
   <div class="search-box">
     <input type="text" id="searchInput" placeholder="Buscar palavra-chave..." />
   </div>
   <div id="filtros"></div>
   <div class="feeds" id="feedContainer"></div>
+  <button id="verMais">🔄 Ver mais notícias</button>
   <script>
     const feeds = [
-      { nome: "Tecnoblog", url: "https://www.tecnoblog.net/feed/" },
-      { nome: "CNBC", url: "https://www.cnbc.com/id/100003114/device/rss/rss.html" },
-      { nome: "9to5Mac", url: "https://9to5mac.com/feed/" },
-      { nome: "IEEE Spectrum", url: "https://spectrum.ieee.org/rss/fulltext" },
-      { nome: "Guinness World Records", url: "https://www.guinnessworldrecords.com/news/rss" },
-      { nome: "Reuters", url: "https://www.reutersagency.com/feed/?best-topics=technology" },
-      { nome: "BleepingComputer", url: "https://www.bleepingcomputer.com/feed/" },
-      { nome: "Ars Technica", url: "https://feeds.arstechnica.com/arstechnica/index" },
-      { nome: "UOL Tilt", url: "https://www.uol.com.br/tilt/feed.xml" },
-      { nome: "The Register", url: "https://www.theregister.com/headlines.atom" },
-      { nome: "TabNews", url: "https://www.tabnews.com.br/rss" },
-      { nome: "Apple Newsroom", url: "https://www.apple.com/newsroom/rss-feed.rss" },
-      { nome: "The Guardian", url: "https://www.theguardian.com/uk/technology/rss" },
-      { nome: "Axios", url: "https://www.axios.com/technology.xml" },
-      { nome: "TechSpot", url: "https://www.techspot.com/backend.xml" },
-      { nome: "Digital Trends", url: "https://www.digitaltrends.com/feed/" },
-      { nome: "TechRadar", url: "https://www.techradar.com/rss" },
-      { nome: "PetaPixel", url: "https://petapixel.com/feed/" }
+      { nome: "TechCrunch", url: "https://techcrunch.com/feed/" },
+      { nome: "The Verge", url: "https://www.theverge.com/rss/index.xml" },
+      { nome: "Digital Trends", url: "https://www.digitaltrends.com/feed/" }
     ];
 
-    async function carregar() {
-      const container = document.getElementById("feedContainer");
+    let todasNoticias = [];
+    let exibidas = 0;
+    const porPagina = 5;
+    const categoriasSet = new Set();
+    const categoriasSelecionadas = new Set();
+
+    async function carregarFeeds() {
       for (const feed of feeds) {
         try {
-          const res = await fetch("/.netlify/functions/rss?url=" + encodeURIComponent(feed.url));
-          const noticias = await res.json();
-          for (const n of noticias.slice(0, 3)) {
-            const card = document.createElement("div");
-            card.className = "card";
-            card.setAttribute("data-title", n.title);
-            card.setAttribute("data-description", n.contentSnippet || n.description || "");
-            card.setAttribute("data-source", feed.nome);
-            
-    const categoria = await fetch("/.netlify/functions/classify-category", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: n.title, description: n.contentSnippet || n.description || "" })
-    }).then(r => r.json()).then(d => d.categoria || "Tecnologia Geral").catch(() => "Tecnologia Geral");
-
-    card.innerHTML = `
-    
-              <div class="tag">${categoria}</div>
-              <small>${new Date(n.pubDate).toLocaleDateString("pt-BR")} • ${feed.nome}</small>
-              <p>${n.contentSnippet || n.description || "[Sem conteúdo]"}</p>
-              <button onclick="gerarResumoNeste(this)">🔎 Ver resumo com IA</button>
-              <a href="${n.link}" target="_blank">Ler notícia original</a>
-            `;
-            container.appendChild(card);
-          }
-        } catch (err) {
-          console.warn("Erro ao carregar", feed.nome, err);
+          const r = await fetch("/.netlify/functions/rss?url=" + encodeURIComponent(feed.url));
+          const noticias = await r.json();
+          todasNoticias.push(...noticias.map(n => ({ ...n, fonte: feed.nome })));
+        } catch (e) {
+          console.warn("Erro no feed", feed.nome);
         }
       }
+      mostrarNoticias();
+    }
+
+    async function mostrarNoticias() {
+      const container = document.getElementById("feedContainer");
+      const fim = exibidas + porPagina;
+      for (let i = exibidas; i < fim && i < todasNoticias.length; i++) {
+        const n = todasNoticias[i];
+        const div = document.createElement("div");
+        div.className = "card";
+        div.innerHTML = `<small>${new Date(n.pubDate).toLocaleDateString("pt-BR")} • ${n.fonte}</small><p>⏳ Gerando conteúdo com IA...</p>`;
+        document.getElementById("feedContainer").appendChild(div);
+
+        const dados = await fetch("/.netlify/functions/generate-summary", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title: n.title, description: n.contentSnippet || n.description, source: n.fonte })
+        }).then(r => r.json());
+
+        div.innerHTML = `
+          <div class="tag" onclick="filtrarPorCategoria('${dados.categoria}', this)">${dados.categoria}</div>
+          <small>${new Date(n.pubDate).toLocaleDateString("pt-BR")} • ${n.fonte}</small>
+          <p>${dados.resumo}</p>
+          <a class="btn-link" href="${n.link}" target="_blank">📎 Ler notícia original</a>
+        `;
+        div.setAttribute("data-categoria", dados.categoria);
+        div.setAttribute("data-titulo", n.title.toLowerCase());
+
+        categoriasSet.add(dados.categoria);
+      }
+      exibidas = fim;
       gerarFiltros();
     }
 
-    function gerarResumoNeste(botao) {
-      const card = botao.closest(".card");
-      const titulo = card.getAttribute("data-title");
-      const descricao = card.getAttribute("data-description");
-      const fonte = card.getAttribute("data-source");
-      const p = card.querySelector("p");
-      p.textContent = "⏳ Gerando resumo...";
-      botao.disabled = true;
-      fetch("/.netlify/functions/generate-summary", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: titulo, description: descricao, source: fonte })
-      }).then(r => r.json()).then(d => {
-        
-        p.textContent = d.resumo || "[Resumo não gerado]";
-        const tag = card.querySelector(".tag");
-        if (d.categoria) tag.textContent = d.categoria;
-    
-        botao.remove();
-      }).catch(() => {
-        p.textContent = "[Erro ao gerar resumo]";
-        botao.disabled = false;
-      });
-    }
-
     function gerarFiltros() {
-      const categorias = new Set();
-      document.querySelectorAll(".card .tag").forEach(tag => categorias.add(tag.textContent));
-      const filtros = document.getElementById("filtros");
-      filtros.innerHTML = [...categorias].map(cat => `<button onclick="filtrarCategoria('${cat}')">${cat}</button>`).join(" ");
-    }
-
-    function filtrarCategoria(cat) {
-      document.querySelectorAll(".card").forEach(card => {
-        const tag = card.querySelector(".tag").textContent;
-        card.classList.toggle("hidden", tag !== cat);
+      const container = document.getElementById("filtros");
+      container.innerHTML = "";
+      categoriasSet.forEach(cat => {
+        const btn = document.createElement("button");
+        btn.className = "filter-btn" + (categoriasSelecionadas.has(cat) ? " selected" : "");
+        btn.innerText = cat;
+        btn.onclick = () => {
+          if (categoriasSelecionadas.has(cat)) {
+            categoriasSelecionadas.delete(cat);
+          } else {
+            categoriasSelecionadas.add(cat);
+          }
+          gerarFiltros();
+          aplicarFiltro();
+        };
+        container.appendChild(btn);
       });
     }
 
-    document.getElementById("searchInput").addEventListener("input", e => {
-      const termo = e.target.value.toLowerCase();
-      document.querySelectorAll(".card").forEach(card => {
-        const txt = card.textContent.toLowerCase();
-        card.classList.toggle("hidden", !txt.includes(termo));
-      });
-    });
+    function filtrarPorCategoria(cat, el) {
+      if (categoriasSelecionadas.has(cat)) {
+        categoriasSelecionadas.delete(cat);
+      } else {
+        categoriasSelecionadas.add(cat);
+      }
+      gerarFiltros();
+      aplicarFiltro();
+    }
 
-    carregar();
+    function aplicarFiltro() {
+      const cards = document.querySelectorAll(".card");
+      cards.forEach(card => {
+        const categoria = card.getAttribute("data-categoria");
+        const titulo = card.getAttribute("data-titulo");
+        const termo = document.getElementById("searchInput").value.toLowerCase();
+        const atendeBusca = titulo.includes(termo);
+        const atendeCat = categoriasSelecionadas.size === 0 || categoriasSelecionadas.has(categoria);
+        card.classList.toggle("hidden", !(atendeBusca && atendeCat));
+      });
+    }
+
+    document.getElementById("searchInput").addEventListener("input", aplicarFiltro);
+    document.getElementById("verMais").addEventListener("click", mostrarNoticias);
+    carregarFeeds();
   </script>
 </body>
 </html>

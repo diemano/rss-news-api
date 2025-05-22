@@ -5,18 +5,20 @@ exports.handler = async function(event) {
   if (!title || !description || !source) {
     return {
       statusCode: 400,
-      body: JSON.stringify({ error: "Campos obrigatórios ausentes: title, description ou source." })
+      body: JSON.stringify({ error: "Campos obrigatórios ausentes." })
     };
   }
 
-  const prompt = `Leia o título e a descrição abaixo. Depois:
-1. Crie uma categoria adequada para a notícia (ex: Inteligência Artificial, Segurança, Mobile, Inovação, Empresas, Ciência, Tecnologia Geral etc.).
-2. Gere um resumo fluido e jornalístico de até 600 caracteres com início, meio e fim.
-3. O resumo deve começar com o título seguido de dois pontos.
-4. Finalize o texto com: As informações são do site ${source}.
+  const prompt = `Com base no título e descrição abaixo:
+1. Gere uma categoria coerente (ex: Inteligência Artificial, Segurança, Mobile, Inovação, Empresas, Ciência, Tecnologia Geral).
+2. Escreva um resumo com até 600 caracteres, começando com o título seguido de dois pontos. O texto deve ter início, meio e fim. Finalize com: As informações são do site ${source}.
 
 Título: ${title}
-Descrição: ${description}`;
+Descrição: ${description}
+
+Formato da resposta:
+Categoria: [categoria]
+Resumo: [resumo completo]`;
 
   try {
     const response = await fetch("https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent?key=" + GEMINI_API_KEY, {
@@ -27,30 +29,22 @@ Descrição: ${description}`;
       })
     });
 
-    if (!response.ok) {
-      const erroTexto = await response.text();
-      return {
-        statusCode: response.status,
-        body: JSON.stringify({ error: "Erro HTTP da API Gemini", status: response.status, resposta: erroTexto })
-      };
-    }
-
     const data = await response.json();
-    const textoCompleto = data?.candidates?.[0]?.content?.parts?.map(p => p.text).join(" ").trim() || "";
+    const texto = data?.candidates?.[0]?.content?.parts?.map(p => p.text).join(" ").trim();
 
-    const match = textoCompleto.match(/^Categoria: (.+?)\nResumo: (.+)/s);
+    const match = texto.match(/^Categoria:\s*(.+?)\s*Resumo:\s*(.+)/s);
     const categoria = match ? match[1].trim() : "Tecnologia Geral";
-    const resumo = match ? match[2].trim() : textoCompleto;
+    const resumo = match ? match[2].trim() : texto;
 
     return {
       statusCode: 200,
       headers: { "Access-Control-Allow-Origin": "*" },
-      body: JSON.stringify({ resumo, categoria })
+      body: JSON.stringify({ categoria, resumo })
     };
   } catch (e) {
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: "Erro interno na função", detalhes: e.message })
+      body: JSON.stringify({ error: "Erro interno", detalhes: e.message })
     };
   }
 };
