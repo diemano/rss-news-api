@@ -1,8 +1,122 @@
 
 <!DOCTYPE html>
-<html lang="pt-BR"><head><meta charset="UTF-8"><title>Página Inicial</title></head>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Notícias com IA (Gemini)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 1rem; }
+    header { background: #01426a; color: white; padding: 1.5rem; text-align: center; }
+    h1 { margin: 0; font-size: 1.8rem; }
+    .search-box { max-width: 600px; margin: 1rem auto; text-align: center; }
+    .search-box input { width: 100%; padding: 0.7rem; font-size: 1rem; border: 1px solid #ccc; border-radius: 6px; }
+    .feeds { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem; padding: 1rem; }
+    .card {
+      background: white; border-radius: 8px; padding: 1rem; box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      display: flex; flex-direction: column; justify-content: space-between; position: relative;
+    }
+    .card .tag {
+      position: absolute; top: 1rem; right: 1rem;
+      background: #01426a; color: white; padding: 0.3rem 0.6rem;
+      font-size: 0.75rem; border-radius: 4px;
+    }
+    .card h3 { font-size: 1.1rem; margin-top: 1.5rem; color: #01426a; }
+    .card small { font-size: 0.8rem; color: #666; margin-bottom: 0.5rem; display: block; }
+    .card p { font-size: 0.95rem; color: #333; flex-grow: 1; white-space: pre-wrap; }
+    .card a { margin-top: 0.7rem; display: inline-block; background: #01426a; color: white;
+      padding: 0.4rem 0.8rem; border-radius: 5px; text-decoration: none; font-size: 0.9rem;
+    }
+    .hidden { display: none !important; }
+  </style>
+</head>
 <body>
-  <h2>✅ Projeto com IA (Gemini) pronto para uso no Netlify</h2>
-  <p>Use <a href="resumo.html">resumo.html</a> para testar sua integração com a API Gemini.</p>
+  <header>
+    <h1>🧠 Notícias de Tecnologia com IA (Gemini)</h1>
+    <p>Tradução e resumo via API Gemini com Google Workspace</p>
+  </header>
+
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="Buscar por palavra-chave..." />
+  </div>
+
+  <div class="feeds" id="feedContainer"></div>
+
+  <script>
+    const feeds = [
+      { nome: "TechCrunch", url: "https://techcrunch.com/feed/" },
+      { nome: "The Verge", url: "https://www.theverge.com/rss/index.xml" },
+      { nome: "Canaltech", url: "https://feed.feedburner.com/canaltech" }
+    ];
+
+    async function gerarResumoGemini(titulo, descricao, fonte) {
+      try {
+        const r = await fetch("/.netlify/functions/generate-summary", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title: titulo, description: descricao, source: fonte })
+        });
+        const d = await r.json();
+        return d?.resumo || "[Resumo não gerado]";
+      } catch (e) {
+        return "[Erro ao gerar resumo]";
+      }
+    }
+
+    function formatarData(pubDate) {
+      try {
+        return new Date(pubDate).toLocaleDateString("pt-BR", { day: 'numeric', month: 'long', year: 'numeric' });
+      } catch {
+        return "";
+      }
+    }
+
+    async function carregar() {
+      const container = document.getElementById("feedContainer");
+
+      for (const feed of feeds) {
+        try {
+          const res = await fetch(`/.netlify/functions/rss?url=${encodeURIComponent(feed.url)}`);
+          const noticias = await res.json();
+
+          for (const n of noticias) {
+            const titulo = n.title || "";
+            const descricao = n.contentSnippet || n.description || "";
+            const dataPub = formatarData(n.pubDate || Date.now());
+            const link = n.link || "#";
+
+            const card = document.createElement("div");
+            card.className = "card";
+            card.innerHTML = `
+              <div class="tag">${feed.nome}</div>
+              <h3>Traduzindo título...</h3>
+              <small>${dataPub} • ${feed.nome}</small>
+              <p>Gerando resumo com IA...</p>
+              <a href="${link}" target="_blank">Ler notícia</a>
+            `;
+            container.appendChild(card);
+
+            const resumo = await gerarResumoGemini(titulo, descricao, feed.nome);
+            const [tituloTraduzido, ...corpo] = resumo.split(/\n|\r|\r\n/);
+            card.querySelector("h3").textContent = tituloTraduzido || titulo;
+            card.querySelector("p").textContent = corpo.join(" ").trim() || resumo;
+          }
+        } catch (err) {
+          console.error("Erro ao carregar feed:", feed.nome, err);
+        }
+      }
+    }
+
+    function aplicarFiltro() {
+      const termo = document.getElementById("searchInput").value.toLowerCase();
+      document.querySelectorAll(".card").forEach(card => {
+        const txt = card.textContent.toLowerCase();
+        card.classList.toggle("hidden", !txt.includes(termo));
+      });
+    }
+
+    document.getElementById("searchInput").addEventListener("input", aplicarFiltro);
+    carregar();
+  </script>
 </body>
 </html>
