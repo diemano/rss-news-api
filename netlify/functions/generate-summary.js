@@ -1,23 +1,23 @@
 
 exports.handler = async function(event) {
-  const GEMINI_API_KEY = "AIzaSyBnBcmex7DGK1cBZLHpXv0EJey683kY29w";
+  const GEMINI_API_KEY = "AIzaSyB6BKTLKPDNBmijmkJRbwPaiY_EFZnxbAk";  // Substitua aqui com a chave da conta do Workspace
   const { title, description, source } = JSON.parse(event.body || "{}");
 
   if (!title || !description || !source) {
     return {
       statusCode: 400,
-      body: JSON.stringify({ error: "Faltam parâmetros obrigatórios: title, description, source." })
+      body: JSON.stringify({ error: "Campos obrigatórios ausentes: title, description ou source." })
     };
   }
 
-  const prompt = `Gere um resumo em português do Brasil entre 400 e 600 caracteres com início, meio e fim.
-O texto deve ser fluido, bem estruturado e com tom jornalístico. Ao final, inclua: "As informações são do site ${source}."
+  const prompt = `Gere um resumo em português do Brasil entre 400 e 600 caracteres com início, meio e fim. 
+O texto deve ser bem estruturado e fluido, com tom jornalístico. Ao final, inclua: As informações são do site ${source}.
 
 Título: ${title}
 Descrição: ${description}`;
 
   try {
-    const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=" + GEMINI_API_KEY, {
+    const response = await fetch("https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=" + GEMINI_API_KEY, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -43,7 +43,7 @@ Descrição: ${description}`;
   } catch (e) {
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: "Erro interno no servidor", detalhes: e.message })
+      body: JSON.stringify({ error: "Erro interno na função", detalhes: e.message })
     };
   }
 };

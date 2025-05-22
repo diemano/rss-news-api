@@ -3,17 +3,17 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Teste de IA - Resumo com Gemini</title>
+  <title>Teste de Resumo com Gemini</title>
 </head>
 <body>
-  <h1>🔍 Gerar Resumo com IA (Gemini)</h1>
+  <h1>🔍 Teste da Função IA (Resumo com Gemini)</h1>
   <form onsubmit="gerarResumo(event)">
     <p><input id="titulo" placeholder="Título da notícia" style="width:100%" required /></p>
-    <p><textarea id="descricao" placeholder="Descrição original (em inglês ou outro idioma)" style="width:100%;height:100px" required></textarea></p>
-    <p><input id="fonte" placeholder="Fonte da notícia (ex: The Verge)" style="width:100%" required /></p>
+    <p><textarea id="descricao" placeholder="Descrição original da notícia" style="width:100%;height:100px" required></textarea></p>
+    <p><input id="fonte" placeholder="Fonte (ex: The Verge)" style="width:100%" required /></p>
     <p><button type="submit">Gerar Resumo</button></p>
   </form>
-  <h3>📝 Resumo Gerado:</h3>
+  <h3>📝 Resumo gerado:</h3>
   <pre id="saida"></pre>
   <script>
     async function gerarResumo(e) {
@@ -23,7 +23,7 @@
       const fonte = document.getElementById("fonte").value;
 
       const saida = document.getElementById("saida");
-      saida.textContent = "⏳ Gerando resumo...";
+      saida.textContent = "⏳ Gerando resumo com IA...";
 
       try {
         const res = await fetch("/.netlify/functions/generate-summary", {
@@ -34,7 +34,7 @@
         const data = await res.json();
         saida.textContent = data.resumo || JSON.stringify(data, null, 2);
       } catch (err) {
-        saida.textContent = "Erro ao chamar função: " + err.message;
+        saida.textContent = "❌ Erro ao chamar função: " + err.message;
       }
     }
   </script>
