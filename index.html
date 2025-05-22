@@ -30,7 +30,7 @@
   <div id="filtros"></div>
   <div class="feeds" id="feedContainer"></div>
   <script>
-    
+    const feeds = [
   { nome: "Tecnoblog", url: "https://www.tecnoblog.net/feed/" },
   { nome: "CNBC", url: "https://www.cnbc.com/id/100003114/device/rss/rss.html" },
   { nome: "9to5Mac", url: "https://9to5mac.com/feed/" },
@@ -55,11 +55,10 @@
   { nome: "TechRadar", url: "https://www.techradar.com/rss" },
   { nome: "Interesting Engineering", url: "https://interestingengineering.com/rss" },
   { nome: "Universidade Fudan", url: "https://www.fudan.edu.cn/en/rss.jsp" },
-  { nome: "PetaPixel", url: "https://petapixel.com/feed/" }
+  { nome: "PetaPixel", url: "https://petapixel.com/feed/" },
+  { nome: "TechCrunch", url: "https://techcrunch.com/feed/" },
+  { nome: "The Verge", url: "https://www.theverge.com/rss/index.xml" }
 ];
-      { nome: "TechCrunch", url: "https://techcrunch.com/feed/" },
-      { nome: "The Verge", url: "https://www.theverge.com/rss/index.xml" }
-    ];
 
     async function carregar() {
       const container = document.getElementById("feedContainer");
