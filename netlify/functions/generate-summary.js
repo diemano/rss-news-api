@@ -34,7 +34,7 @@ Descrição: ${description}`;
     }
 
     const data = await response.json();
-    const texto = data?.candidates?.[0]?.content?.parts?.map(p => p.text).join(" ").trim() || "Nenhum conteúdo gerado.";
+    const texto = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Nenhum conteúdo gerado.";
     return {
       statusCode: 200,
       headers: { "Access-Control-Allow-Origin": "*" },
