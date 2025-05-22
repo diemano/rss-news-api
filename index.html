@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>Feed de Notícias de TI</title>
+  <title>Notícias com IA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 1rem; margin: 0; }
@@ -24,8 +24,8 @@
 </head>
 <body>
   <header>
-    <h1>🧠 Feed de Notícias de TI</h1>
-    <p>As principais notícias de TI do Brasil e Mundo selecionadas.</p>
+    <h1>🧠 Agregador de Notícias de TI</h1>
+    <p>As principais notícias de TI do Brasil e do Mundo selecionadas e resumidas com IA</p>
   </header>
   <div class="search-box">
     <input type="text" id="searchInput" placeholder="Buscar palavra-chave..." />
@@ -34,7 +34,8 @@
   <div class="feeds" id="feedContainer"></div>
   <button id="verMais">🔄 Ver mais notícias</button>
   <script>
-    const feeds = [
+    
+const feeds = [
       { nome: "Tecnoblog", url: "https://www.tecnoblog.net/feed/" },
       { nome: "CNBC", url: "https://www.cnbc.com/id/100003114/device/rss/rss.html" },
       { nome: "9to5Mac", url: "https://9to5mac.com/feed/" },
@@ -55,7 +56,10 @@
       { nome: "PetaPixel", url: "https://petapixel.com/feed/" }
     ];
 
-    let todasNoticias = [];
+    
+feeds.sort(() => Math.random() - 0.5);  // embaralhar feeds aleatoriamente
+let todasNoticias = [];
+
     let exibidas = 0;
     const porPagina = 5;
     const categoriasSet = new Set();
