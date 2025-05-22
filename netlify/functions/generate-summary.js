@@ -1,4 +1,3 @@
-
 exports.handler = async function(event) {
   const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
   const { title, description, source } = JSON.parse(event.body || "{}");
@@ -10,13 +9,11 @@ exports.handler = async function(event) {
     };
   }
 
- const prompt = `Gere um texto jornalístico para um público de TI, com até 500 caracteres, começando com o título da notícia completo, seguido de dois pontos. 
-Após os dois pontos, escreva um resumo coeso, com início, meio e fim. O conteúdo deve ter linguagem fluida e bem estruturada, um texto bom para ler.
-Finalize com a frase: As informações são do site ${source}.
-
-A estrutura poderia ser dessa forma:
-
-Título da notícia completo adaptado: resumo completo com início, meio e fim. As informações são do site ${source}.
+  const prompt = `Leia o título e a descrição abaixo. Depois:
+1. Crie uma categoria adequada para a notícia (ex: Inteligência Artificial, Segurança, Mobile, Inovação, Empresas, Ciência, Tecnologia Geral etc.).
+2. Gere um resumo fluido e jornalístico de até 600 caracteres com início, meio e fim.
+3. O resumo deve começar com o título seguido de dois pontos.
+4. Finalize o texto com: As informações são do site ${source}.
 
 Título: ${title}
 Descrição: ${description}`;
@@ -39,11 +36,16 @@ Descrição: ${description}`;
     }
 
     const data = await response.json();
-    const texto = data?.candidates?.[0]?.content?.parts?.map(p => p.text).join(" ").trim() || "Nenhum conteúdo gerado.";
+    const textoCompleto = data?.candidates?.[0]?.content?.parts?.map(p => p.text).join(" ").trim() || "";
+
+    const match = textoCompleto.match(/^Categoria: (.+?)\nResumo: (.+)/s);
+    const categoria = match ? match[1].trim() : "Tecnologia Geral";
+    const resumo = match ? match[2].trim() : textoCompleto;
+
     return {
       statusCode: 200,
       headers: { "Access-Control-Allow-Origin": "*" },
-      body: JSON.stringify({ resumo: texto })
+      body: JSON.stringify({ resumo, categoria })
     };
   } catch (e) {
     return {
