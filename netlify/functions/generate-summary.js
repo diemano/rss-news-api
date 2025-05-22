@@ -12,7 +12,7 @@ exports.handler = async function(event) {
   const prompt = `Com base no título e descrição abaixo:
 1. Gere uma categoria coerente (ex: Inteligência Artificial, Segurança, Mobile, Inovação, Empresas, Ciência, Tecnologia Geral).
 2. Escreva um resumo com até 600 caracteres, começando com o título seguido de dois pontos. O texto deve ter início, meio e fim. Finalize com: As informações são do site ${source}.
-
+Toda a resposta deve ser em português do Brasil.
 Título: ${title}
 Descrição: ${description}
 
