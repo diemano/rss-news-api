@@ -1,6 +1,6 @@
 
 exports.handler = async function(event) {
-  const GEMINI_API_KEY = "SUA_CHAVE_AQUI";  // Substitua aqui com a chave da conta do Workspace
+  const GEMINI_API_KEY = "AIzaSyB6BKTLKPDNBmijmkJRbwPaiY_EFZnxbAk";  // Substitua aqui com a chave da conta do Workspace
   const { title, description, source } = JSON.parse(event.body || "{}");
 
   if (!title || !description || !source) {
