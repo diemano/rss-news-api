@@ -17,7 +17,7 @@ Título: ${title}
 Descrição: ${description}`;
 
   try {
-    const response = await fetch("https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=" + GEMINI_API_KEY, {
+    const response = await fetch("https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent?key=" + GEMINI_API_KEY, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -34,7 +34,7 @@ Descrição: ${description}`;
     }
 
     const data = await response.json();
-    const texto = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Nenhum conteúdo gerado.";
+    const texto = data?.candidates?.[0]?.content?.parts?.map(p => p.text).join(" ").trim() || "Nenhum conteúdo gerado.";
     return {
       statusCode: 200,
       headers: { "Access-Control-Allow-Origin": "*" },
