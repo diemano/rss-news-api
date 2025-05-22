@@ -10,13 +10,13 @@ exports.handler = async function(event) {
     };
   }
 
-  const prompt = `Gere um texto jornalístico para um público de TI com até 500 caracteres, começando com o título da notícia seguido de dois pontos. 
+  const prompt = `Gere um texto jornalístico para um público de TI com até 500 caracteres, começando com o título da notícia completo seguido de dois pontos. 
 Após os dois pontos, escreva um resumo coeso, com início, meio e fim. O conteúdo deve ter linguagem fluida e bem estruturada, um texto bom para ler.
 Finalize com a frase: As informações são do site ${source}.
 
 A estrutura poderia ser dessa forma:
 
-Título da notícia completo adaptado caso seja muito grande: resumo completo com início, meio e fim. As informações são do site ${source}.
+Título da notícia completo adaptado: resumo completo com início, meio e fim. As informações são do site ${source}.
 
 Título: ${title}
 Descrição: ${description}`;
