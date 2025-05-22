@@ -16,7 +16,7 @@ Finalize com a frase: As informações são do site ${source}.
 
 A estrutura poderia ser dessa forma:
 
-Título da notícia: resumo completo com início, meio e fim. As informações são do site ${source}.
+Título da notícia completo adaptado caso seja muito grande: resumo completo com início, meio e fim. As informações são do site ${source}.
 
 Título: ${title}
 Descrição: ${description}`;
