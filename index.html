@@ -24,8 +24,8 @@
 </head>
 <body>
   <header>
-    <h1>🧠 Agregador de Notícias de TI</h1>
-    <p>As principais notícias de TI do Brasil e do Mundo selecionadas e resumidas com IA</p>
+    <h1>🧠 Notícias com IA</h1>
+    <p>Resumo e categoria por IA de fontes variadas</p>
   </header>
   <div class="search-box">
     <input type="text" id="searchInput" placeholder="Buscar palavra-chave..." />
@@ -34,8 +34,7 @@
   <div class="feeds" id="feedContainer"></div>
   <button id="verMais">🔄 Ver mais notícias</button>
   <script>
-    
-const feeds = [
+    const feeds = [
       { nome: "Tecnoblog", url: "https://www.tecnoblog.net/feed/" },
       { nome: "CNBC", url: "https://www.cnbc.com/id/100003114/device/rss/rss.html" },
       { nome: "9to5Mac", url: "https://9to5mac.com/feed/" },
@@ -56,25 +55,23 @@ const feeds = [
       { nome: "PetaPixel", url: "https://petapixel.com/feed/" }
     ];
 
-    
-feeds.sort(() => Math.random() - 0.5);  // embaralhar feeds aleatoriamente
-let todasNoticias = [];
-
+    let todasNoticias = [];
     let exibidas = 0;
     const porPagina = 5;
     const categoriasSet = new Set();
     const categoriasSelecionadas = new Set();
 
     async function carregarFeeds() {
-      for (const feed of feeds) {
+      const resultados = await Promise.all(feeds.map(async feed => {
         try {
           const r = await fetch("/.netlify/functions/rss?url=" + encodeURIComponent(feed.url));
           const noticias = await r.json();
-          todasNoticias.push(...noticias.map(n => ({ ...n, fonte: feed.nome })));
-        } catch (e) {
-          console.warn("Erro no feed", feed.nome);
+          return noticias.map(n => ({ ...n, fonte: feed.nome }));
+        } catch {
+          return [];
         }
-      }
+      }));
+      todasNoticias = resultados.flat().sort(() => Math.random() - 0.5);
       mostrarNoticias();
     }
 
@@ -86,7 +83,7 @@ let todasNoticias = [];
         const div = document.createElement("div");
         div.className = "card";
         div.innerHTML = `<small>${new Date(n.pubDate).toLocaleDateString("pt-BR")} • ${n.fonte}</small><p>⏳ Gerando conteúdo com IA...</p>`;
-        document.getElementById("feedContainer").appendChild(div);
+        container.appendChild(div);
 
         const dados = await fetch("/.netlify/functions/generate-summary", {
           method: "POST",
@@ -102,7 +99,6 @@ let todasNoticias = [];
         `;
         div.setAttribute("data-categoria", dados.categoria);
         div.setAttribute("data-titulo", n.title.toLowerCase());
-
         categoriasSet.add(dados.categoria);
       }
       exibidas = fim;
@@ -129,7 +125,7 @@ let todasNoticias = [];
       });
     }
 
-    function filtrarPorCategoria(cat, el) {
+    function filtrarPorCategoria(cat) {
       if (categoriasSelecionadas.has(cat)) {
         categoriasSelecionadas.delete(cat);
       } else {
@@ -140,11 +136,10 @@ let todasNoticias = [];
     }
 
     function aplicarFiltro() {
-      const cards = document.querySelectorAll(".card");
-      cards.forEach(card => {
+      const termo = document.getElementById("searchInput").value.toLowerCase();
+      document.querySelectorAll(".card").forEach(card => {
         const categoria = card.getAttribute("data-categoria");
         const titulo = card.getAttribute("data-titulo");
-        const termo = document.getElementById("searchInput").value.toLowerCase();
         const atendeBusca = titulo.includes(termo);
         const atendeCat = categoriasSelecionadas.size === 0 || categoriasSelecionadas.has(categoria);
         card.classList.toggle("hidden", !(atendeBusca && atendeCat));
