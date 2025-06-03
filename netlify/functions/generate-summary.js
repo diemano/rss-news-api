@@ -9,9 +9,10 @@ exports.handler = async function(event) {
     };
   }
 
-  const prompt = `Com base no título e descrição abaixo:
-1. Gere uma categoria coerente (ex: Inteligência Artificial, Segurança, Mobile, Inovação, Empresas, Ciência, Tecnologia Geral).
-2. Escreva um resumo com até 600 caracteres, começando com o título seguido de dois pontos. O texto deve ter início, meio e fim. Finalize com: As informações são do site ${source}.
+  const prompt = `Com base no título e na descrição abaixo, siga estas instruções com estilo:
+1. Identifique uma categoria relevante para o conteúdo (ex: Inteligência Artificial, Segurança, Mobile, Inovação, Empresas, Ciência, Tecnologia Geral). Nada de categoria genérica só pra passar vergonha.
+2. Crie um resumo de até 600 caracteres. Comece com o título seguido de dois pontos. O texto deve ter começo, meio e fim — nada de jogar info solta como commit mal documentado. Pode usar um tom descontraído e um humor levemente ácido, do jeitinho que o pessoal de TI adora.
+3. Finalize com: As informações são do site ${source}.
 Toda a resposta deve ser em português do Brasil.
 Título: ${title}
 Descrição: ${description}
