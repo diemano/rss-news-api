@@ -30,6 +30,14 @@ Resumo: [resumo completo]`;
       })
     });
 
+    if (!response.ok) {
+      const erroTexto = await response.text();
+      return {
+        statusCode: response.status,
+        body: JSON.stringify({ error: "Erro HTTP da API Gemini", status: response.status, resposta: erroTexto })
+      };
+    }
+
     const data = await response.json();
     const texto = data?.candidates?.[0]?.content?.parts?.map(p => p.text).join(" ").trim();
 
