@@ -2,3 +2,17 @@
 [build]
   publish = "./"
   functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+  included_files = ["data/*.json"]
+
+[[scheduled.functions]]
+  path = "check-doepb"
+  # roda todo dia às 08:40 (Horário de Fortaleza, UTC-3)
+  schedule = "CRON_TZ=America/Fortaleza 40 8 * * *"
+
+[[redirects]]
+  from = "/status"
+  to = "/.netlify/functions/status"
+  status = 200
