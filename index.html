@@ -34,10 +34,22 @@
   <div class="feeds" id="feedContainer"></div>
   <button id="verMais">🔄 Ver mais notícias</button>
   <script>
+  async function init() {
     const senha = prompt("Digite a senha:");
-  if (senha !== "setic123") {
+  try {
+    const resp = await fetch("/.netlify/functions/auth", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ senha })
+    });
+    const data = await resp.json();
+    if (!data.authorized) {
+      document.body.innerHTML = "<h2>Acesso negado</h2>";
+      throw new Error("Acesso negado");
+    }
+  } catch (e) {
     document.body.innerHTML = "<h2>Acesso negado</h2>";
-    throw new Error("Acesso negado");
+    throw e;
   }
     const feeds = [
       { nome: "Tecnoblog", url: "https://www.tecnoblog.net/feed/" },
@@ -173,6 +185,8 @@
     document.getElementById("searchInput").addEventListener("input", aplicarFiltro);
     document.getElementById("verMais").addEventListener("click", mostrarNoticias);
     carregarFeeds();
+  }
+  init();
   </script>
 </body>
 </html>
